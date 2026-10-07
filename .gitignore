@@ -16,3 +16,6 @@ __pycache__/
 # Fichiers temporaires
 *.wav
 *.log
+
+# Godot 4 (FarmVale 3D)
+farmvale3d/.godot/

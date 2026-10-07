@@ -1,0 +1,203 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/textures/menu_bg.png" id="2_bg"]
+
+[node name="MainMenu" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Titre" type="Label" parent="Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.757, 0.306, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 96
+text = "FarmVale"
+horizontal_alignment = 1
+
+[node name="SousTitre" type="Label" parent="Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.969, 0.941, 0.863, 1)
+theme_override_font_sizes/font_size = 30
+text = "La Ferme des Quatre Saisons"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.8, 0.85)
+theme_override_font_sizes/font_size = 17
+text = "Un jeu de ferme 3D cozy, stylisé et moderne — 100 % français"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+
+[node name="Boutons" type="VBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="NouvellePartie" type="Button" parent="Center/VBox/Boutons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 58)
+layout_mode = 2
+text = "Nouvelle partie"
+
+[node name="Continuer" type="Button" parent="Center/VBox/Boutons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 58)
+layout_mode = 2
+text = "Continuer"
+
+[node name="Options" type="Button" parent="Center/VBox/Boutons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 58)
+layout_mode = 2
+text = "Options"
+
+[node name="Quitter" type="Button" parent="Center/VBox/Boutons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 58)
+layout_mode = 2
+text = "Quitter"
+
+[node name="OptionsPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_right = 270.0
+offset_top = -200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="OptionsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="TitreOptions" type="Label" parent="OptionsPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.757, 0.306, 1)
+theme_override_font_sizes/font_size = 34
+text = "Options"
+horizontal_alignment = 1
+
+[node name="RowGeneral" type="HBoxContainer" parent="OptionsPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="OptionsPanel/VBox/RowGeneral"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+text = "Volume général"
+
+[node name="VolumeGeneral" type="HSlider" parent="OptionsPanel/VBox/RowGeneral"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="RowMusique" type="HBoxContainer" parent="OptionsPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="OptionsPanel/VBox/RowMusique"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+text = "Musique"
+
+[node name="VolumeMusique" type="HSlider" parent="OptionsPanel/VBox/RowMusique"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.75
+
+[node name="RowSFX" type="HBoxContainer" parent="OptionsPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="OptionsPanel/VBox/RowSFX"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+text = "Effets sonores"
+
+[node name="VolumeSFX" type="HSlider" parent="OptionsPanel/VBox/RowSFX"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="PleinEcran" type="CheckBox" parent="OptionsPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Plein écran"
+
+[node name="Retour" type="Button" parent="OptionsPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 52)
+layout_mode = 2
+text = "Retour"
+
+[node name="Version" type="Label" parent="."]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_right = 220.0
+offset_top = -42.0
+offset_bottom = -10.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.8, 0.6)
+theme_override_font_sizes/font_size = 14
+text = "v0.1"
+horizontal_alignment = 1

@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/camera_rig.gd" id="1_cam"]
+
+[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_1"]
+length = 7.5
+margin = 0.25
+
+[node name="CameraRig" type="Node3D"]
+script = ExtResource("1_cam")
+
+[node name="Yaw" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Pitch" type="Node3D" parent="Yaw"]
+unique_name_in_owner = true
+
+[node name="SpringArm" type="SpringArm3D" parent="Yaw/Pitch"]
+unique_name_in_owner = true
+spring_length = 7.5
+shape = SubResource("SeparationRayShape3D_1")
+
+[node name="Camera" type="Camera3D" parent="Yaw/Pitch/SpringArm"]
+unique_name_in_owner = true
+current = true
+fov = 62.0
