@@ -1,0 +1,18 @@
+# Build
+build/
+*.o
+*.exe
+*.obj
+*.pdb
+*.ilk
+
+# En-têtes X11 vendored (régénérés par tools/fetch_x11_headers.sh)
+third_party/x11/
+
+# Python
+__pycache__/
+*.pyc
+
+# Fichiers temporaires
+*.wav
+*.log
