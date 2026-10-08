@@ -129,6 +129,24 @@ func _run_tests() -> void:
 		var moved := player.global_position.distance_to(start_pos)
 		_check("joueur : se déplace avec Z/W", moved > 0.5, "distance=%.2f" % moved)
 
+		# le joueur tient sur le sol (collision du terrain — régression « chute à travers »)
+		for i in 90:
+			await get_tree().physics_frame
+		_check("joueur : reste sur le sol (collision)",
+			player.is_on_floor() and player.position.y > -1.0,
+			"y=%.2f on_floor=%s" % [player.position.y, player.is_on_floor()])
+		var sol_col := world.get_node_or_null("SolCollision")
+		_check("monde : collision du sol (StaticBody3D)", sol_col != null)
+		var animaux_sol := true
+		var animaux := world.get_node_or_null("Props/Animaux")
+		if animaux:
+			for a in animaux.get_children():
+				if a.position.y < -1.0:
+					animaux_sol = false
+		_check("animaux : restent sur le sol", animaux_sol)
+		var maison_col := world.get_node_or_null("Props/Maison/Collision")
+		_check("monde : collision de la maison", maison_col != null)
+
 	# --- 5. Système de temps (cycle jour/nuit)
 	if time_sys:
 		var sun_rot_before := sun.rotation_degrees.x if sun else 0.0

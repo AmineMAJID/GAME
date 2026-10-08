@@ -18,6 +18,7 @@ func _ready() -> void:
 	pond.position = Vector3(24.0, Props.ground_height(24.0, -18.0) + 0.1, -18.0)
 	pond.add_to_group("water")
 	player.position = Vector3(0.0, Props.ground_height(0.0, 6.0) + 0.1, 6.0)
+	_build_ground_collision()
 	# applique la monnaie sauvegardée
 	GameManager.money_changed.connect(_on_money_changed)
 	if hud and hud.has_method("set_money"):
@@ -25,6 +26,29 @@ func _ready() -> void:
 	# toast de bienvenue
 	if hud and hud.has_method("show_toast"):
 		hud.call("show_toast", "Bienvenue à FarmVale ! ZQSD pour se déplacer, souris pour la caméra.", 6.0)
+
+
+func _build_ground_collision() -> void:
+	# Corps statique sous le sol VISUEL : maillage aplati sur les mêmes collines
+	# que le shader (Props.ground_height) pour que joueur et animaux tiennent.
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(220.0, 220.0)
+	plane.subdivide_width = 110
+	plane.subdivide_depth = 110
+	var arrays := plane.surface_get_arrays(0)
+	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for i in verts.size():
+		verts[i].y = Props.ground_height(verts[i].x, verts[i].z)
+	var col_mesh := ArrayMesh.new()
+	col_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var body := StaticBody3D.new()
+	body.name = "SolCollision"
+	body.collision_layer = 1  # layer « monde »
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	shape.shape = col_mesh.create_trimesh_shape()
+	body.add_child(shape)
+	add_child(body)
 
 
 func _exit_tree() -> void:

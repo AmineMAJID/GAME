@@ -4,6 +4,7 @@
 // pour poser les props à la bonne hauteur.
 // ============================================================
 shader_type spatial;
+render_mode diffuse_toon, specular_toon;
 
 uniform vec4 grass_light : source_color = vec4(0.47, 0.70, 0.34, 1.0);
 uniform vec4 grass_dark : source_color = vec4(0.29, 0.52, 0.23, 1.0);

@@ -69,6 +69,19 @@ static func foliage(color: Color) -> ShaderMaterial:
 	return mat
 
 
+static func add_collision(parent: Node, shape: Shape3D, pos: Vector3) -> void:
+	# Corps statique (layer « monde ») : empêche le joueur de traverser le prop
+	var body := StaticBody3D.new()
+	body.name = "Collision"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.position = pos
+	var col := CollisionShape3D.new()
+	col.shape = shape
+	body.add_child(col)
+	parent.add_child(body)
+
+
 static var _mesh_counter := 0
 
 static func add_mesh(parent: Node, mesh: Mesh, pos: Vector3, mat: Material, name: String = "") -> MeshInstance3D:
@@ -112,6 +125,10 @@ func _spawn_house() -> void:
 	var hz := -14.0
 	house.position = Vector3(hx, ground_height(hx, hz) - 0.02, hz)
 	add_child(house)
+	# collision : le joueur ne traverse pas la maison
+	var house_col := BoxShape3D.new()
+	house_col.size = Vector3(7.2, 3.4, 5.2)
+	add_collision(house, house_col, Vector3(0, 1.7, 0))
 
 	# murs
 	var walls := BoxMesh.new()
@@ -199,6 +216,10 @@ func _spawn_fields() -> void:
 				var soil := BoxMesh.new()
 				soil.size = Vector3(1.7, 0.14, 1.7)
 				add_mesh(fields, soil, Vector3(wx, gy + 0.05, wz), soil_toon, "Parcelle")
+				# collision : parcelle surélevée (on marche dessus)
+				var soil_col := BoxShape3D.new()
+				soil_col.size = Vector3(1.7, 0.14, 1.7)
+				add_collision(fields, soil_col, Vector3(wx, gy + 0.05, wz))
 				# sillons (lignes plus sombres)
 				for s in 3:
 					var furrow := BoxMesh.new()
@@ -233,6 +254,11 @@ func _spawn_trees() -> void:
 		var gy := ground_height(wx, wz)
 		var tree := Node3D.new()
 		tree.name = "Arbre"
+		# collision : tronc
+		var trunk_col := CylinderShape3D.new()
+		trunk_col.radius = 0.3
+		trunk_col.height = 1.4
+		add_collision(tree, trunk_col, Vector3(0, 0.7, 0))
 		tree.position = Vector3(wx, gy - 0.02, wz)
 		trees.add_child(tree)
 		var scale_v := randf_range(0.9, 1.25)
@@ -298,6 +324,11 @@ func _spawn_fence_side(fence: Node3D, a: Vector2, b: Vector2, step: float, mat: 
 		post.bottom_radius = 0.09
 		post.height = 1.0
 		add_mesh(fence, post, Vector3(p.x, gy + 0.5, p.y), mat, "Poteau")
+		# collision : poteau
+		var post_col := CylinderShape3D.new()
+		post_col.radius = 0.12
+		post_col.height = 1.0
+		add_collision(fence, post_col, Vector3(p.x, gy + 0.5, p.y))
 		# 2 lisses horizontales
 		var rail_len := step
 		for h in [0.32, 0.66]:
@@ -531,8 +562,8 @@ func _spawn_animals() -> void:
 		var animal := Animal.new()
 		animal.name = "Animal_%s_%d" % [kinds[i], i]
 		animal.kind = kinds[i]
-		animal.collision_layer = 4
-		animal.collision_mask = 1
+		animal.collision_layer = 4    # layer « animaux »
+		animal.collision_mask = 1 | 2  # monde + joueur
 		var a := rng.randf_range(0.0, TAU)
 		var r := rng.randf_range(1.0, 6.0)
 		var wx := 15.0 + cos(a) * r

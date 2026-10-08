@@ -40,7 +40,7 @@ ciel procédural avec cycle jour/nuit complet.
 - **Sauvegarde JSON** (`user://farmvale_save.json`) + réglages persistants.
 - **Effets sonores 100 % synthétisés** (aucun asset externe requis) sur 3 bus audio
   (Master / Musique / SFX) réglables séparément.
-- **Test automatique headless** : `scenes/tools/self_test.tscn` vérifie tout le projet
+- **Test automatique headless (58 vérifications)** : `scenes/tools/self_test.tscn` vérifie tout le projet
   sans fenêtre (monde, props, mouvement, temps, HUD, sauvegarde).
 
 ## 🧪 Lancer le test automatique (sans fenêtre)
