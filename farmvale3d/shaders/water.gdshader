@@ -6,7 +6,7 @@ render_mode cull_disabled;
 
 uniform vec4 shallow_color : source_color = vec4(0.36, 0.68, 0.72, 0.72);
 uniform vec4 deep_color : source_color = vec4(0.10, 0.32, 0.48, 0.88);
-uniform vec3 sun_direction = vec3(0.0, -1.0, 0.0);
+uniform vec3 sun_direction = vec3(0.0, 1.0, 0.0);  // direction VERS le soleil
 uniform float wave_speed = 0.55;
 uniform float wave_scale = 1.3;
 uniform float wave_height = 0.09;
@@ -56,5 +56,5 @@ void fragment() {
 	vec3 sun = normalize(sun_direction);
 	float sparkle = pow(max(dot(reflect(-sun, NORMAL), VIEW), 0.0), 48.0);
 	sparkle += pow(max(dot(reflect(-sun, NORMAL), VIEW), 0.0), 8.0) * 0.15;
-	EMISSION = vec3(1.0, 0.96, 0.85) * sparkle * 1.4 * clamp(-sun.y, 0.0, 1.0);
+	EMISSION = vec3(1.0, 0.96, 0.85) * sparkle * 1.4 * clamp(sun.y, 0.0, 1.0);
 }

@@ -164,6 +164,11 @@ func _run_tests() -> void:
 		time_sys.advance_minutes(12 * 60) # → 12h
 		_check("temps : midi (énergie soleil)", sun.light_energy > 0.8, "énergie=%.2f" % sun.light_energy)
 		_check("temps : pas d'étoiles le jour", sky_mat.get_shader_parameter("star_density") < 0.1)
+		# le disque de soleil doit apparaître DANS le ciel (uniform = vers le soleil)
+		var sun_dir: Vector3 = sky_mat.get_shader_parameter("sun_direction")
+		_check("temps : soleil vers le haut à midi", sun_dir.y > 0.9, "sun_dir=%s" % sun_dir)
+		var moon_dir: Vector3 = sky_mat.get_shader_parameter("moon_direction")
+		_check("temps : lune opposée au soleil", moon_dir.y < -0.9, "moon_dir=%s" % moon_dir)
 
 	# --- 6. HUD
 	if hud:

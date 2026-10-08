@@ -161,11 +161,15 @@ func _apply_time() -> void:
 		_sky_material.set_shader_parameter("sun_color", pal[2])
 		_sky_material.set_shader_parameter("star_density", pal[3])
 		if sun:
-			var sun_dir: Vector3 = sun.global_transform.basis.z
-			_sky_material.set_shader_parameter("sun_direction", sun_dir)
+			# « sun_direction » = direction VERS le soleil (le +Z local de la lampe
+			# pointe dans le sens de la lumière, donc on inverse)
+			var to_sun: Vector3 = -sun.global_transform.basis.z
+			_sky_material.set_shader_parameter("sun_direction", to_sun)
 			_sky_material.set_shader_parameter("sun_glow", 1.2 + clampf(sun_height(), 0.0, 1.0) * 0.8)
 		if _moon:
-			_sky_material.set_shader_parameter("moon_direction", _moon.global_transform.basis.z)
+			# lune à l'opposé du soleil
+			var to_moon: Vector3 = -_moon.global_transform.basis.z
+			_sky_material.set_shader_parameter("moon_direction", to_moon)
 	# --- Environnement : ambient + brouillard
 	if _env:
 		var up2 := clampf(sun_height(), 0.0, 1.0)
@@ -187,14 +191,14 @@ func _apply_time() -> void:
 	for flies in get_tree().get_nodes_in_group("fireflies"):
 		if flies is GPUParticles3D:
 			flies.emitting = night_factor > 0.5
-	# --- Reflets du soleil sur l'eau
+	# --- Reflets du soleil sur l'eau (direction VERS le soleil)
 	if sun:
-		var sun_dir: Vector3 = sun.global_transform.basis.z
+		var to_sun: Vector3 = -sun.global_transform.basis.z
 		for water in get_tree().get_nodes_in_group("water"):
 			if water is MeshInstance3D:
 				var wmat: Material = water.get_active_material(0)
 				if wmat is ShaderMaterial:
-					wmat.set_shader_parameter("sun_direction", sun_dir)
+					wmat.set_shader_parameter("sun_direction", to_sun)
 
 
 ## Interpolation circulaire entre les 4 palettes (minuit/aube/midi/crépuscule)
