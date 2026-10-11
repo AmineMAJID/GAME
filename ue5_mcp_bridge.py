@@ -5,7 +5,8 @@
 # Petit script en Python 3 standard (AUCUNE dépendance, aucun pip)
 # qui fait le lien entre :
 #   - le relai de l'agent (URL publique e2b, ex: https://8765-xxx.e2b.app)
-#   - le serveur MCP de TON éditeur UE5 (ex: http://localhost:3000/mcp)
+#   - le serveur MCP de TON éditeur UE5
+#     (plugin officiel Epic « Unreal MCP » : http://localhost:8000/mcp)
 #
 # Le pont ne fait que des connexions SORTANTES (vers le relai) :
 # ton éditeur reste sur localhost, personne ne peut s'y connecter
@@ -14,11 +15,12 @@
 # Utilisation :
 #   python ue5_mcp_bridge.py <URL_RELAI> <TOKEN> <URL_MCP> [TOKEN_MCP]
 #
-# Exemple (serveur MCP UE5 par défaut, port 3000) :
-#   python ue5_mcp_bridge.py https://8765-xxxx.e2b.app fv-7c3d9e2a1b http://localhost:3000/mcp
+# Exemple (serveur MCP officiel Epic, port 8000) :
+#   python ue5_mcp_bridge.py https://8765-xxxx.e2b.app fv-7c3d9e2a1b http://localhost:8000/mcp
 #
-# Le 4e argument (optionnel) est le « capability token » du plugin UE5
-# s'il est exigé (en-tête Authorization: Bearer <token>).
+# Le 4e argument (optionnel) est un token « capability » du plugin UE5
+# s'il est exigé (en-tête Authorization: Bearer <token>). Le serveur
+# officiel Epic n'en a pas besoin.
 # ============================================================
 import json
 import sys
@@ -38,6 +40,10 @@ MCP_TOKEN = sys.argv[4] if len(sys.argv) > 4 else None
 session = None  # Mcp-Session-Id renvoyé par le serveur MCP
 
 
+def log(msg):
+    print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
 def http(method, url, raw=None, headers=None, timeout=120):
     h = {"Content-Type": "application/json"}
     if headers:
@@ -50,8 +56,22 @@ def http(method, url, raw=None, headers=None, timeout=120):
         return e.code, e.headers, e.read().decode("utf-8", "replace")
 
 
-print(f"pont UE5 MCP : relai={RELAY}  éditeur={MCP}")
-print("CTRL+C pour arrêter. Laisse cette fenêtre ouverte pendant toute la session.")
+def send_result(rid, status, body, headers=None):
+    """Renvoie le résultat d'un job au relai (ne doit jamais échouer
+    silencieusement : sinon l'agent attend 120 s puis reçoit un 504)."""
+    payload = json.dumps({
+        "id": rid, "status": status, "body": body,
+        "headers": headers or {},
+    }).encode()
+    try:
+        http("POST", f"{RELAY}/result?token={TOKEN}", raw=payload, timeout=30)
+    except Exception as e:
+        log(f"!! impossible de renvoyer le résultat #{rid} au relai : {e}")
+
+
+log(f"pont UE5 MCP : relai={RELAY}  éditeur={MCP}")
+log("CTRL+C pour arrêter. Laisse cette fenêtre ouverte pendant toute la session.")
+log("En attente de requêtes de l'agent... (tes actions dans l'éditeur apparaîtront ici)")
 
 while True:
     try:
@@ -60,12 +80,34 @@ while True:
             time.sleep(0.2 if st == 204 else 1.0)
             continue
         work = json.loads(body)
+        rid = work["id"]
+        try:
+            req = json.loads(work["body"])
+            label = req.get("method", "?")
+        except Exception:
+            label = "?"
+        log(f"job #{rid} reçu : {label} -> POST {MCP}")
+
         headers = {"Accept": "application/json, text/event-stream"}
         if session:
             headers["Mcp-Session-Id"] = session
         if MCP_TOKEN:
             headers["Authorization"] = f"Bearer {MCP_TOKEN}"
-        st, hdrs, raw = http("POST", MCP, raw=work["body"].encode(), headers=headers)
+        try:
+            st, hdrs, raw = http("POST", MCP, raw=work["body"].encode(), headers=headers)
+        except Exception as e:
+            # Éditeur injoignable (serveur MCP arrêté, mauvais port...) :
+            # on renvoie l'erreur à l'agent tout de suite.
+            log(f"!! éditeur injoignable ({MCP}) : {e}")
+            err = json.dumps({"jsonrpc": "2.0", "id": None, "error": {
+                "code": -32000,
+                "message": f"Éditeur UE5 injoignable ({MCP}) : {e}. "
+                           f"Vérifie que l'éditeur est ouvert et que le serveur MCP "
+                           f"tourne (Edit > Editor Preferences > General > Model Context "
+                           f"Protocol > Auto Start Server, ou console : ModelContextProtocol.StartServer)"}})
+            send_result(rid, 0, err)
+            continue
+
         sid = hdrs.get("Mcp-Session-Id")
         if sid:
             session = sid
@@ -77,13 +119,9 @@ while True:
             datas = [ln[5:].strip() for ln in raw.splitlines() if ln.startswith("data:")]
             if datas:
                 result_body = datas[-1]
-        http("POST", f"{RELAY}/result?token={TOKEN}",
-             raw=json.dumps({
-                 "id": work["id"],
-                 "status": st,
-                 "body": result_body,
-                 "headers": {"content-type": ctype, "mcp-session-id": session or ""},
-             }).encode())
+        log(f"job #{rid} terminé : HTTP {st} ({len(result_body)} octets)")
+        send_result(rid, st, result_body,
+                    {"content-type": ctype, "mcp-session-id": session or ""})
     except Exception as e:
-        print("erreur pont :", e)
+        log(f"erreur pont : {e}")
         time.sleep(1.0)
