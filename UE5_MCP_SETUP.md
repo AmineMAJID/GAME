@@ -55,17 +55,33 @@ Le serveur écoute sur **http://127.0.0.1:8000/mcp** (transport Streamable HTTP,
 
 > Alternative sans auto-start : laisse décoché et tape `ModelContextProtocol.StartServer` dans la console de l'éditeur (touche `²` / backtick).
 
+### Étape 3bis — Le « traffic access token » e2b (obligatoire)
+
+Le proxy public du bac à sable (e2b) **exige un en-tête** `e2b-traffic-access-token` sur **toutes** les requêtes — sans lui, tout le monde reçoit une page **403 « MISSING TRAFFIC ACCESS TOKEN »** (ton navigateur comme le pont). Seule la plateforme Arena connaît ce token : c'est elle qui l'injecte quand elle affiche le LIVE PREVIEW dans ton interface.
+
+**Pour récupérer le token** (au choix) :
+1. **Depuis l'interface Arena** : ouvre le LIVE PREVIEW du relai (il affiche `{"ok": true...}` sur `/health`). Appuie sur **F12 → onglet Réseau (Network) → recharge la preview → clique sur la requête vers `8765-ivut4ppbx3h3xx57402hb.e2b.app` → onglet « En-têtes » (Headers) → copie la valeur de `e2b-traffic-access-token`**.
+2. Ou regarde dans l'interface Arena s'il existe un champ « traffic access token » / détails du bac à sable.
+3. Ou copie-colle ici l'URL complète du preview telle qu'affichée par Arena (elle peut contenir le token).
+
+**Test rapide** (depuis ton PC, PowerShell) :
+```powershell
+Invoke-WebRequest -Uri "https://8765-ivut4ppbx3h3xx57402hb.e2b.app/health" -Headers @{"e2b-traffic-access-token"="COLLE_LE_TOKEN_ICI"} -UseBasicParsing
+```
+→ doit répondre `{"ok": true, "pending": 0}`. Si oui → le token est bon.
+
 ### Étape 4 — Lancer le pont sur ton PC
 
-Terminal (CMD/PowerShell) à la racine du dépôt `GAME` :
+Terminal (CMD/PowerShell) à la racine du dépôt `GAME` — **avec le traffic access token**, le plus propre étant une variable d'environnement :
 
-```bash
+```powershell
+$env:E2B_TRAFFIC_TOKEN = "COLLE_LE_TOKEN_ICI"
 python ue5_mcp_bridge.py https://8765-ivut4ppbx3h3xx57402hb.e2b.app fv-7c3d9e2a1b http://localhost:8000/mcp
 ```
 
-**Pas de 4e argument** — le serveur officiel Epic n'a pas de token (loopback only).
+Le 4e argument (token MCP) n'est pas nécessaire — le serveur officiel Epic n'a pas de token (loopback only).
 
-Vérification : le pont affiche `connecte au relai ...` puis `-> POST ... tools/list` quand je lui envoie une requête. Laisse cette fenêtre **ouverte** pendant toute la session.
+Vérification : le pont affiche `traffic access token e2b : présent` puis `job #N reçu : ...` quand je lui envoie une requête. Laisse cette fenêtre **ouverte** pendant toute la session.
 
 > Si le port 8000 est déjà pris chez toi, change « Server Port Number » à l'étape 3 et adapte l'URL du pont en conséquence.
 

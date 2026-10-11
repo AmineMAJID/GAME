@@ -13,7 +13,7 @@
 # directement. Le pont tourne en boucle jusqu'à CTRL+C.
 #
 # Utilisation :
-#   python ue5_mcp_bridge.py <URL_RELAI> <TOKEN> <URL_MCP> [TOKEN_MCP]
+#   python ue5_mcp_bridge.py <URL_RELAI> <TOKEN> <URL_MCP> [TOKEN_MCP] [TRAFFIC_TOKEN]
 #
 # Exemple (serveur MCP officiel Epic, port 8000) :
 #   python ue5_mcp_bridge.py https://8765-xxxx.e2b.app fv-7c3d9e2a1b http://localhost:8000/mcp
@@ -21,21 +21,31 @@
 # Le 4e argument (optionnel) est un token « capability » du plugin UE5
 # s'il est exigé (en-tête Authorization: Bearer <token>). Le serveur
 # officiel Epic n'en a pas besoin.
+#
+# Le 5e argument (optionnel) est le « traffic access token » e2b : le proxy
+# public du bac à sable exige l'en-tête « e2b-traffic-access-token » sur
+# TOUTES les requêtes. Il peut aussi être fourni via la variable
+# d'environnement E2B_TRAFFIC_TOKEN (pratique sous Windows) :
+#   $env:E2B_TRAFFIC_TOKEN = "le-token"
+#   python ue5_mcp_bridge.py https://8765-xxxx.e2b.app fv-7c3d9e2a1b http://localhost:8000/mcp
 # ============================================================
 import json
+import os
 import sys
 import time
 import urllib.request
 import urllib.error
 
 if len(sys.argv) < 4:
-    print("usage: python ue5_mcp_bridge.py <URL_RELAI> <TOKEN> <URL_MCP> [TOKEN_MCP]")
+    print("usage: python ue5_mcp_bridge.py <URL_RELAI> <TOKEN> <URL_MCP> [TOKEN_MCP] [TRAFFIC_TOKEN]")
     sys.exit(1)
 
 RELAY = sys.argv[1].rstrip("/")
 TOKEN = sys.argv[2]
 MCP = sys.argv[3].rstrip("/")
 MCP_TOKEN = sys.argv[4] if len(sys.argv) > 4 else None
+TRAFFIC_TOKEN = (sys.argv[5] if len(sys.argv) > 5
+                 else os.environ.get("E2B_TRAFFIC_TOKEN"))
 
 session = None  # Mcp-Session-Id renvoyé par le serveur MCP
 
@@ -64,18 +74,33 @@ def send_result(rid, status, body, headers=None):
         "headers": headers or {},
     }).encode()
     try:
-        http("POST", f"{RELAY}/result?token={TOKEN}", raw=payload, timeout=30)
+        http("POST", f"{RELAY}/result?token={TOKEN}", raw=payload,
+             timeout=30, headers=relay_headers())
     except Exception as e:
         log(f"!! impossible de renvoyer le résultat #{rid} au relai : {e}")
 
 
+def relay_headers():
+    """En-têtes pour les requêtes VERS LE RELAI (proxy e2b public)."""
+    h = {}
+    if TRAFFIC_TOKEN:
+        h["e2b-traffic-access-token"] = TRAFFIC_TOKEN
+    return h
+
+
 log(f"pont UE5 MCP : relai={RELAY}  éditeur={MCP}")
+if TRAFFIC_TOKEN:
+    log("traffic access token e2b : présent (le proxy public acceptera les requêtes)")
+else:
+    log("ATTENTION : pas de traffic access token e2b -> le proxy public "
+        "répondra 403 (fourni-le en 5e argument ou via E2B_TRAFFIC_TOKEN)")
 log("CTRL+C pour arrêter. Laisse cette fenêtre ouverte pendant toute la session.")
 log("En attente de requêtes de l'agent... (tes actions dans l'éditeur apparaîtront ici)")
 
 while True:
     try:
-        st, _, body = http("GET", f"{RELAY}/poll?token={TOKEN}", timeout=30)
+        st, _, body = http("GET", f"{RELAY}/poll?token={TOKEN}",
+                           timeout=30, headers=relay_headers())
         if st != 200 or not body:
             time.sleep(0.2 if st == 204 else 1.0)
             continue
