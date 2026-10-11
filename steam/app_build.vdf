@@ -1,0 +1,31 @@
+// ============================================================
+// FarmVale — script SteamPipe (upload du build vers Steam)
+// À adapter : remplace <TON_APPID> et <TON_LOGIN>.
+// Usage :
+//   1. Télécharge SteamPipe (Steamworks -> Downloads)
+//   2. Copie ce fichier dans un dossier, adapte les chemins
+//   3. Lance : steamcmd +login <TON_LOGIN> +run_app_build <ce_fichier.vdf> +quit
+// ============================================================
+"appbuild"
+{
+	"appid"		"<TON_APPID>"
+	"desc"		"FarmVale — build du %DATE%"
+	"buildoutput"	"C:\steamcmd\output"
+	"contentroot"	"C:\chemin\vers\GAME\build\steam"
+	"setlive"	""
+	"preview"	"0"
+
+	"depots"
+	{
+		"<TON_APPID>_1"
+		{
+			"FileMapping"
+			{
+				"LocalPath"	"*"
+				"DepotPath"	"."
+				"recursive"	"1"
+			}
+			"FileExclusion"	"*.pdb"
+		}
+	}
+}
